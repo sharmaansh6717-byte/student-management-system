@@ -1,0 +1,20 @@
+<%- include('partials/header') %>
+
+<div class="form-box">
+  <h2>Edit Book</h2>
+  <form action="/books/edit/<%= book._id %>" method="POST">
+    <label>Title</label>
+    <input type="text" name="title" value="<%= book.title %>" required>
+
+    <label>Author</label>
+    <input type="text" name="author" value="<%= book.author %>" required>
+
+    <label>Category</label>
+    <input type="text" name="category" value="<%= book.category %>">
+
+    <button type="submit">Update Book</button>
+  </form>
+  <p><a href="/books">← Back to catalog</a></p>
+</div>
+
+<%- include('partials/footer') %>

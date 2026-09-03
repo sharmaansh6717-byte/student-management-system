@@ -1,0 +1,61 @@
+<%- include('partials/header') %>
+
+<h2>Book Catalog</h2>
+
+<form action="/books" method="GET" class="search-form">
+  <input type="text" name="search" placeholder="Search by title or author" value="<%= search %>">
+  <button type="submit">Search</button>
+</form>
+
+<table class="book-table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Author</th>
+      <th>Category</th>
+      <th>Status</th>
+      <% if (user.role === 'admin') { %>
+        <th>Admin Actions</th>
+      <% } %>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% books.forEach(book => { %>
+      <tr>
+        <td><%= book.title %></td>
+        <td><%= book.author %></td>
+        <td><%= book.category %></td>
+        <td>
+          <% if (book.available) { %>
+            <span class="badge available">Available</span>
+          <% } else { %>
+            <span class="badge issued">Issued to <%= book.issuedTo %></span>
+          <% } %>
+        </td>
+
+        <% if (user.role === 'admin') { %>
+          <td>
+            <a href="/books/edit/<%= book._id %>">Edit</a>
+            <form action="/books/delete/<%= book._id %>" method="POST" style="display:inline">
+              <button type="submit" onclick="return confirm('Delete this book?')">Delete</button>
+            </form>
+          </td>
+        <% } %>
+
+        <td>
+          <% if (book.available) { %>
+            <form action="/books/issue/<%= book._id %>" method="POST">
+              <button type="submit">Issue</button>
+            </form>
+          <% } else if (book.issuedTo === user.name) { %>
+            <form action="/books/return/<%= book._id %>" method="POST">
+              <button type="submit">Return</button>
+            </form>
+          <% } %>
+        </td>
+      </tr>
+    <% }) %>
+
+    <% if (books.length === 0) { %>
+      <tr><td colspan="6">No books found.</td></tr>
