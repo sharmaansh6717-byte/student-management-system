@@ -30,7 +30,7 @@ router.get('/add', isLoggedIn, isAdmin, (req, res) => {
   res.render('addBook');
 });
 
-// ----- Handle "add book" submission (admin only) -----
+// ----- Handle "add book" submission (admin only) ----
 router.post('/add', isLoggedIn, isAdmin, async (req, res) => {
   try {
     const { title, author, category } = req.body;
