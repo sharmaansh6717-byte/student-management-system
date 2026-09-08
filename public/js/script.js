@@ -11,31 +11,25 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-// Mouse position (defaults to center)
 let mouse = { x: width / 2, y: height / 2 };
 window.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
 });
 
-// Create a set of "cloud" blobs that drift and react to the cursor
-const clouds = [];
-const CLOUD_COUNT = 6;
-const colors = [
-  'rgba(99, 102, 241, 0.25)',   // indigo
-  'rgba(139, 92, 246, 0.22)',   // purple
-  'rgba(59, 130, 246, 0.20)',   // blue
-];
+// Generate stars
+const STAR_COUNT = 180;
+const stars = [];
 
-for (let i = 0; i < CLOUD_COUNT; i++) {
-  clouds.push({
+for (let i = 0; i < STAR_COUNT; i++) {
+  stars.push({
     x: Math.random() * width,
     y: Math.random() * height,
-    baseRadius: 120 + Math.random() * 180,
-    color: colors[i % colors.length],
-    angle: Math.random() * Math.PI * 2,
-    speed: 0.002 + Math.random() * 0.003,
-    driftRadius: 80 + Math.random() * 120
+    radius: Math.random() * 1.6 + 0.4,
+    baseAlpha: Math.random() * 0.6 + 0.3,
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinklePhase: Math.random() * Math.PI * 2,
+    parallax: Math.random() * 0.04 + 0.01 // how much it drifts with cursor
   });
 }
 
@@ -45,46 +39,34 @@ function animate() {
   time += 1;
   ctx.clearRect(0, 0, width, height);
 
-  clouds.forEach((cloud, i) => {
-    // Natural drifting motion (like slow-moving clouds)
-    cloud.angle += cloud.speed;
-    const driftX = Math.cos(cloud.angle) * cloud.driftRadius;
-    const driftY = Math.sin(cloud.angle * 0.8) * cloud.driftRadius;
+  // Offset from center — used for parallax drift
+  const offsetX = (mouse.x - width / 2);
+  const offsetY = (mouse.y - height / 2);
 
-    let targetX = cloud.x + driftX;
-    let targetY = cloud.y + driftY;
+  stars.forEach((star) => {
+    // Parallax: stars shift slightly opposite/with cursor based on their depth
+    const px = star.x - offsetX * star.parallax;
+    const py = star.y - offsetY * star.parallax;
 
-    // Cursor influence: nearby clouds get pulled/pushed like a wave
-    const dx = mouse.x - targetX;
-    const dy = mouse.y - targetY;
+    // Twinkle effect
+    const twinkle = Math.sin(time * star.twinkleSpeed + star.twinklePhase);
+    const alpha = star.baseAlpha + twinkle * 0.3;
+
+    // Slight glow boost near cursor
+    const dx = mouse.x - px;
+    const dy = mouse.y - py;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const influenceRadius = 400;
+    const proximityGlow = dist < 150 ? (1 - dist / 150) * 0.6 : 0;
 
-    if (dist < influenceRadius) {
-      const force = (1 - dist / influenceRadius) * 60;
-      const angle = Math.atan2(dy, dx);
-      targetX -= Math.cos(angle) * force;
-      targetY -= Math.sin(angle) * force;
-    }
-
-    // Pulse the radius slightly with time + cursor proximity
-    const pulse = Math.sin(time * 0.02 + i) * 20;
-    const proximityBoost = dist < influenceRadius ? (1 - dist / influenceRadius) * 40 : 0;
-    const radius = cloud.baseRadius + pulse + proximityBoost;
-
-    const gradient = ctx.createRadialGradient(
-      targetX, targetY, 0,
-      targetX, targetY, radius
-    );
-    gradient.addColorStop(0, cloud.color);
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
-
-    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(targetX, targetY, radius, 0, Math.PI * 2);
+    ctx.arc(px, py, star.radius + proximityGlow * 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(alpha + proximityGlow, 1)})`;
+    ctx.shadowBlur = 4 + proximityGlow * 10;
+    ctx.shadowColor = 'rgba(199, 210, 254, 0.9)';
     ctx.fill();
   });
 
+  ctx.shadowBlur = 0;
   requestAnimationFrame(animate);
 }
 
